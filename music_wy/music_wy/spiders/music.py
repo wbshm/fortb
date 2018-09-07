@@ -11,12 +11,32 @@ from Crypto.Cipher import AES
 # https://blog.csdn.net/sixu_9days/article/details/80780916
 class MusicSpider(scrapy.Spider):
     name = 'music'
-    allowed_domains = ['music.163.com']
-    start_urls = ['http://music.163.com/']
+    allowed_domains = ['manage.5054399.com']
+    start_urls = ['http://manage.5054399.com:96/admin/zhuanti/data-zt_id-390?uid=&second_id=0&type=2&code=&start=&end=&rand=1536313124&page=2']
+
+    def start_requests(self):
+        pass
 
     def parse(self, response):  # 默认解析器方法
-        print(response)
-        print('i am in parse')
+        # data = {'uid': '', 'second_id': 0, 'type': 2, 'code': '', 'start': '', 'end': '', 'rand': 1536308617, 'page': 1}
+        # yield scrapy.FormRequest(
+        #     url=response.url,
+        #     method='POST',
+        #     formdata=data,
+        #     # 如果需要多次提交表单，且url一样，那么就必须加此参数dont_filter，防止被当成重复网页过滤掉了
+        #     dont_filter=True
+        # )
+
+        tr_list = response.xpath("/html/body/div[6]/table/tbody//tr")
+        rtn_item = {}
+        for tr in tr_list:
+            rtn_item['name'] = tr.xpath('./dt[5]')
+            temp = json.load(tr.xpath('./dt[6]'))
+            if 'feel' in temp:
+                rtn_item['feel'] = temp['feel']
+            elif 'feeling' in temp:
+                rtn_item['feel'] = temp['feeling']
+            # yield rtn_item
 
 
 class MakeRequest:
@@ -27,7 +47,7 @@ class MakeRequest:
         'Accept-Language': "zh-CN,zh;q=0.9",
         'Connection': "keep-alive",
         'Host': "music.163.com",
-        'User-Agent': "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.79 Safari/537.36"
+        'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
     }
 
     first_param = "{rid:\"\", offset:\"0\", total:\"true\", limit:\"20\", csrf_token:\"\"}"
@@ -66,7 +86,9 @@ class MakeRequest:
             "encSecKey": encSecKey
         }
         print(data)
-        response = requests.post(url, headers=self.headers, data=data)
+        requests.packages.urllib3.disable_warnings()
+        response = requests.post(url, headers=self.headers, data=data, verify=False)
+        # response = requests.post(url, headers=self.headers, data=data)
         return response.content
 
     def get_url(self, url):
