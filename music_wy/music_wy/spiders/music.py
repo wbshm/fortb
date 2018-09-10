@@ -10,12 +10,11 @@ from Crypto.Cipher import AES
 
 # https://blog.csdn.net/sixu_9days/article/details/80780916
 class MusicSpider(scrapy.Spider):
+    max_page = 1826
     name = 'music'
     allowed_domains = ['manage.5054399.com']
-    start_urls = ['http://manage.5054399.com:96/admin/zhuanti/data-zt_id-390?uid=&second_id=0&type=2&code=&start=&end=&rand=1536313124&page=2']
-
-    def start_requests(self):
-        pass
+    baseUrl = 'http://manage.5054399.com:96/admin/zhuanti/data-zt_id-390?uid=&second_id=0&type=2&code=&start=&end=&rand=1536544081&page='
+    start_urls = ['http://manage.5054399.com:96/admin/zhuanti/data-zt_id-390?uid=&second_id=0&type=2&code=&start=&end=&rand=1536544081&page=1']
 
     def parse(self, response):  # 默认解析器方法
         # data = {'uid': '', 'second_id': 0, 'type': 2, 'code': '', 'start': '', 'end': '', 'rand': 1536308617, 'page': 1}
@@ -26,17 +25,24 @@ class MusicSpider(scrapy.Spider):
         #     # 如果需要多次提交表单，且url一样，那么就必须加此参数dont_filter，防止被当成重复网页过滤掉了
         #     dont_filter=True
         # )
-
         tr_list = response.xpath("/html/body/div[6]/table/tbody//tr")
         rtn_item = {}
         for tr in tr_list:
-            rtn_item['name'] = tr.xpath('./dt[5]')
-            temp = json.load(tr.xpath('./dt[6]'))
+            rtn_item['name'] = tr.xpath('./td[5]/text()').extract_first()
+            rtn_item['uid'] = tr.xpath('./td[2]/text()').extract_first()
+            temp = json.loads(tr.xpath('./td[6]/text()').extract_first())
             if 'feel' in temp:
                 rtn_item['feel'] = temp['feel']
             elif 'feeling' in temp:
                 rtn_item['feel'] = temp['feeling']
-            # yield rtn_item
+            yield rtn_item
+        count = response.meta.get('count', 1)
+        if count <= self.max_page:
+            next_url = self.baseUrl + str(count)
+            yield scrapy.Request(next_url,  # 请求的url
+                                 callback=self.parse,  # 回调函数
+                                 meta={'count': count + 1}  # 传递参数
+                                 )
 
 
 class MakeRequest:
