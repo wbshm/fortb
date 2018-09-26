@@ -1,3 +1,3 @@
-1. make spider
-2. save to mongoDb
+1. make spider // done
+2. save to mongoDb  // done
 3. analysis
