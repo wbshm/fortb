@@ -5,7 +5,8 @@
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 import random
-
+import time
+import json
 from scrapy import signals
 
 
@@ -89,23 +90,6 @@ class MusicWyDownloaderMiddleware(object):
         # - or raise IgnoreRequest: process_exception() methods of
         #   installed downloader middleware will be called
         request.headers['User-Agent'] = random.choice(self.ua_list)
-        request.cookies = {
-            '29112e482870a2f437135225bc77a982': 'true;',
-            'myweb_uid_5054399': '775;',
-            'myweb_uname_5054399': 'd2FuZ3J1aXFpbmdANDM5OWluYy5jb20%3D;',
-            'myweb_sign_5054399': 'b67fb;',
-            'myweb_ver_5054399': 'e7d1093d8d9f03a4a84dbde3b3a4d68f;',
-            'hidden': 'value;',
-            'PHPSESSID': 'f4vvn6lnpq95rq7mdqks5dvt33;',
-            'phoneCookie': 'b5c8a32a4617a00d9f661b3c0948568d;',
-            '__MANAGE_USER': '924b7c1ea25732f2ef638d5b120ebfa0;',
-            '__MANAGE_UID': '775;',
-            '__do_top_func_name_775': 'my%E9%A1%B5%E6%B8%B8;',
-            '__TOP_URL_ID': '1113;',
-            '__LEFT_URL_ID': '1179;',
-            '__do_sec_func_name_775': '%E4%B8%93%E9%A2%98%E6%B4%BB%E5%8A%A8;',
-            '__RTOP_URL_ID': '1180',
-        }
         # return None
 
     def process_response(self, request, response, spider):
@@ -129,3 +113,35 @@ class MusicWyDownloaderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+class ProxyMiddleWare(object):
+    """docstring for ProxyMiddleWare"""
+    def process_request(self,request, spider):
+        '''对request对象加上proxy'''
+        proxy = self.get_random_proxy()
+        print("this is request ip:"+proxy)
+        request.meta['proxy'] = proxy
+
+
+    def process_response(self, request, response, spider):
+        '''对返回的response处理'''
+        # 如果返回的response状态不是200，重新生成当前request对象
+        if response.status != 200:
+            proxy = self.get_random_proxy()
+            print("this is response ip:"+proxy)
+            # 对当前reque加上代理
+            request.meta['proxy'] = proxy
+            return request
+        return response
+
+    def get_random_proxy(self):
+        '''随机从文件中读取proxy'''
+        while 1:
+            with open('你保存的\proxies.txt', 'r') as f:
+                proxies = json.load(f)
+            if proxies:
+                break
+            else:
+                time.sleep(1)
+        proxy = random.choice(proxies).strip()
+        return proxy

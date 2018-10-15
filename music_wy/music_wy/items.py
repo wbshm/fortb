@@ -10,7 +10,9 @@ import scrapy
 
 class MusicWyItem(scrapy.Item):
     # define the fields for your item here like:
+    id = scrapy.Field
     name = scrapy.Field()
-    feel = scrapy.Field()
-    uid = scrapy.Field()
+    hits = scrapy.Field()
+    content = scrapy.Field()
+
     # pass

@@ -4,17 +4,17 @@ import base64
 import requests
 import json
 from Crypto.Cipher import AES
-
+from scrapy import Selector
 
 # https://music.163.com/#/playlist?id=924680166
-
 # https://blog.csdn.net/sixu_9days/article/details/80780916
+
 class MusicSpider(scrapy.Spider):
-    max_page = 1826
-    name = 'music'
-    allowed_domains = ['manage.5054399.com']
-    baseUrl = 'http://manage.5054399.com:96/admin/zhuanti/data-zt_id-390?uid=&second_id=0&type=2&code=&start=&end=&rand=1536544081&page='
-    start_urls = ['http://manage.5054399.com:96/admin/zhuanti/data-zt_id-390?uid=&second_id=0&type=2&code=&start=&end=&rand=1536544081&page=1']
+    max_page = 10
+    name = 'music'  # 用于区别Spider。 该名字必须是唯一的，您不可以为不同的Spider设定相同的名字。
+    allowed_domains = ['movie.douban.com']
+    baseUrl = 'https://movie.douban.com/subject/26985127/comments?limit=20&sort=new_score&status=P&start='
+    start_urls = ['https://movie.douban.com/subject/26985127/comments?limit=20&sort=new_score&status=P&start=0']  # 包含了Spider在启动时进行爬取的url列表。 因此，第一个被获取到的页面将是其中之一。 后续的URL则从初始的URL获取到的数据中提取。
 
     def parse(self, response):  # 默认解析器方法
         # data = {'uid': '', 'second_id': 0, 'type': 2, 'code': '', 'start': '', 'end': '', 'rand': 1536308617, 'page': 1}
@@ -25,20 +25,29 @@ class MusicSpider(scrapy.Spider):
         #     # 如果需要多次提交表单，且url一样，那么就必须加此参数dont_filter，防止被当成重复网页过滤掉了
         #     dont_filter=True
         # )
-        tr_list = response.xpath("/html/body/div[6]/table/tbody//tr")
+        # sel = Selector(text=response)
+        # print(sel.css('#ip_list'))
+        item_list = response.css("#comments div.comment-item").extract()
+        tmp_list = response.css("#comments div.comment-item")
         rtn_item = {}
-        for tr in tr_list:
-            rtn_item['name'] = tr.xpath('./td[5]/text()').extract_first()
-            rtn_item['uid'] = tr.xpath('./td[2]/text()').extract_first()
-            temp = json.loads(tr.xpath('./td[6]/text()').extract_first())
-            if 'feel' in temp:
-                rtn_item['feel'] = temp['feel']
-            elif 'feeling' in temp:
-                rtn_item['feel'] = temp['feeling']
+        for val in tmp_list:
+            rtn_item['hist'] = val.css('span.votes::text').extract_first(defalut=0)
+
+        for val in item_list:
+            tmp = Selector(text=val)
+            rtn_item['hits'] = tmp.css('span.votes::text').extract_first(defalut=0)
+            rtn_item['name'] = tmp.css('span.comment-info>a::text').extract_first(defalut='null')
+            rtn_item['content'] = tmp.css('span.short::text').extract_first(defalut='null')
             yield rtn_item
+        # rtn_item = {}
+        # for tr in tr_list:
+        #     rtn_item['ip'] = tr.xpath('./td[2]/text()').extract_first()
+        #     rtn_item['port'] = tr.xpath('./td[3]/text()').extract_first()
+        #     print(rtn_item)
+        #     yield rtn_item
         count = response.meta.get('count', 1)
         if count <= self.max_page:
-            next_url = self.baseUrl + str(count)
+            next_url = self.baseUrl + str(count * 20)
             yield scrapy.Request(next_url,  # 请求的url
                                  callback=self.parse,  # 回调函数
                                  meta={'count': count + 1}  # 传递参数
@@ -47,8 +56,6 @@ class MusicSpider(scrapy.Spider):
 
 class MakeRequest:
     headers = {
-        'Cookie': 'appver=1.5.0.75771;',
-        'Referer': 'http://music.163.com/',
         'Accept': "*/*",
         'Accept-Language': "zh-CN,zh;q=0.9",
         'Connection': "keep-alive",
