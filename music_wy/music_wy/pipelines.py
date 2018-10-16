@@ -38,7 +38,8 @@ class MusicWyPipeline(object):
     def open_spider(self, spider):
         self.myClient = pymongo.MongoClient('mongodb://localhost:27017/')
         self.myDb = self.myClient['fortb']  # 数据库
-        self.mySets = self.myDb['music_wy']
+        # self.mySets = self.myDb['music_wy']
+        self.mySets = self.myDb['ip_proxy']
         pass
 
     def close_spider(self, spider):

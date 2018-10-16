@@ -11,8 +11,18 @@ import scrapy
 class MusicWyItem(scrapy.Item):
     # define the fields for your item here like:
     id = scrapy.Field
+
+    # music
+    '''
     name = scrapy.Field()
     hits = scrapy.Field()
     content = scrapy.Field()
+    # '''
+
+    # spider
+
+    ip = scrapy.Field()  # ip地址
+    port = scrapy.Field()  # 端口号
+    delay = scrapy.Field()  # 延迟
 
     # pass

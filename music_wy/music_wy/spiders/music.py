@@ -6,6 +6,7 @@ import json
 from Crypto.Cipher import AES
 from scrapy import Selector
 
+
 # https://music.163.com/#/playlist?id=924680166
 # https://blog.csdn.net/sixu_9days/article/details/80780916
 
@@ -14,7 +15,8 @@ class MusicSpider(scrapy.Spider):
     name = 'music'  # 用于区别Spider。 该名字必须是唯一的，您不可以为不同的Spider设定相同的名字。
     allowed_domains = ['movie.douban.com']
     baseUrl = 'https://movie.douban.com/subject/26985127/comments?limit=20&sort=new_score&status=P&start='
-    start_urls = ['https://movie.douban.com/subject/26985127/comments?limit=20&sort=new_score&status=P&start=0']  # 包含了Spider在启动时进行爬取的url列表。 因此，第一个被获取到的页面将是其中之一。 后续的URL则从初始的URL获取到的数据中提取。
+    start_urls = [
+        'https://movie.douban.com/subject/26985127/comments?limit=20&sort=new_score&status=P&start=0']  # 包含了Spider在启动时进行爬取的url列表。 因此，第一个被获取到的页面将是其中之一。 后续的URL则从初始的URL获取到的数据中提取。
 
     def parse(self, response):  # 默认解析器方法
         # data = {'uid': '', 'second_id': 0, 'type': 2, 'code': '', 'start': '', 'end': '', 'rand': 1536308617, 'page': 1}
@@ -104,10 +106,10 @@ class MakeRequest:
         # response = requests.post(url, headers=self.headers, data=data)
         return response.content
 
-    def get_url(self, url):
+    def get_url(self, request_url):
         rtn = {}
         try:
-            json_dict = json.loads(self.get_json(url, self.get_params(), self.get_encSecKey()))
+            json_dict = json.loads(self.get_json(request_url, self.get_params(), self.get_encSecKey()))
             if 'hotComments' in json_dict:
                 rtn = json_dict['hotComments']
         except ValueError:

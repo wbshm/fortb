@@ -4,7 +4,7 @@ import requests
 from requests.exceptions import ProxyError, ConnectTimeout, ReadTimeout
 
 
-class ipproxy:
+class ipproxy(object):
     proxy = []
 
     def __init__(self):
@@ -20,7 +20,7 @@ class ipproxy:
     def check_ip(self, ip_item):
         try:
             tmp = requests.get('http://www.baidu.com', proxies={'http': '%s:%s' % (ip_item['ip'], ip_item['port'])},
-                               timeout=5)
+                               timeout=2)
             checked = True
         except(BaseException, ProxyError, ConnectTimeout, ReadTimeout):
             checked = False
