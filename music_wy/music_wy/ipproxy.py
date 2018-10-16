@@ -1,31 +1,38 @@
 import json
 from random import choice
 import requests
-from requests.exceptions import ProxyError
+from requests.exceptions import ProxyError, ConnectTimeout, ReadTimeout
 
 
 class ipproxy:
-    def get_ip(self):
-        proxy = ""
-        with open('./tmp/ip.json', 'r') as f:
-            proxy = json.load(f)
-        if proxy:
-            return choice(proxy)
+    proxy = []
 
-    def check_ip(self):
-        ip_proxy = self.get_ip()
-        print('%s:%s' % (ip_proxy['ip'], ip_proxy['port']))
+    def __init__(self):
+        with open('./tmp/ip.json', 'r') as f:
+            self.proxy = json.load(f)
+
+    def get_ip(self):
+        return self.proxy
+
+    def get_random_ip(self):
+        return choice(self.proxy)
+
+    def check_ip(self, ip_item):
         try:
-            tmp = requests.get('http://localhost', proxies={'http': '%s:%s' % (ip_proxy['ip'], ip_proxy['port'])})
-        except ProxyError:
-            print('ProxyError')
-            exit()
-        print(tmp.content)
-        print(1)
+            tmp = requests.get('http://www.baidu.com', proxies={'http': '%s:%s' % (ip_item['ip'], ip_item['port'])},
+                               timeout=5)
+            checked = True
+        except(BaseException, ProxyError, ConnectTimeout, ReadTimeout):
+            checked = False
+        return checked
 
 
 if __name__ == '__main__':
-    obj = ipproxy()
-    obj.check_ip()
-    ip = obj.get_ip()
-    print(ip)
+    proxy = ipproxy()
+    count = 0
+    for val in proxy.get_ip():
+        if proxy.check_ip(val):
+            print('success %s:%s' % (val['ip'], val['port']))
+        else:
+            count += 1
+            print("error %s  %s:%s" % (count, val['ip'], val['port']))
