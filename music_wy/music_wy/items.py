@@ -24,5 +24,6 @@ class MusicWyItem(scrapy.Item):
     ip = scrapy.Field()  # ip地址
     port = scrapy.Field()  # 端口号
     delay = scrapy.Field()  # 延迟
+    deadline = scrapy.Field()
 
     # pass

@@ -58,6 +58,10 @@ class MusicWySpiderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
+class DownloadTimeoutMiddleware(object):
+    pass
+
+
 class MusicWyDownloaderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
@@ -113,6 +117,7 @@ class MusicWyDownloaderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
 
 class ProxyMiddleWare(object):
     """docstring for ProxyMiddleWare"""

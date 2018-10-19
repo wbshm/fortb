@@ -1,6 +1,7 @@
 import time
 import scrapy
 import sys
+import datetime
 
 sys.path.append('C:\\Users\\wang\\Desktop\\haveafun\\fortb\\music_wy\\music_wy')
 
@@ -16,13 +17,21 @@ class xicidaili(scrapy.Spider):
     max_page = 100
 
     def parse(self, response):
-        tr_list = response.css('#ip_list tr')
+        tr_list = response.css('#ip_list tr:nth-child(n+1)')
         obj_ipproxy = ipproxy.ipproxy()
         for tr in tr_list:
-            item = {'ip': tr.css('td:nth-child(2)::text').extract_first(default=0),
-                    'port': tr.css('td:nth-child(3)::text').extract_first(default=0)}
+            item = {
+                'ip': tr.css('td:nth-child(2)::text').extract_first(default=0),
+                'port': tr.css('td:nth-child(3)::text').extract_first(default=0),
+            }
+            alive = tr.css('td:nth-child(9)::text').extract_first(default=0)
+            update_time = tr.css('td:nth-child(10)::text').extract_first(default=0)
+            item['deadline'] = self.get_deadline(alive, update_time)
             start = time.time()
-            if obj_ipproxy.check_ip(item) and item['ip'] != 0:
+            if datetime.datetime.now() > item['deadline']:
+                print('deadline %s' % item['ipd'])
+                continue
+            if item['ip'] != 0 and obj_ipproxy.check_ip(item):
                 item['delay'] = time.time() - start
                 yield item
         count = response.meta.get('count', 2)
@@ -32,3 +41,27 @@ class xicidaili(scrapy.Spider):
                                  callback=self.parse,  # 回调函数
                                  meta={'count': count + 1}  # 传递参数
                                  )
+
+    def check_lest_time(self):
+        pass
+
+    @staticmethod
+    def get_deadline(alive, update_time):
+        dic = {
+            "天": "days",
+            "小时": "hours",
+            "分钟": "minutes"
+        }
+        format_time = datetime.datetime.strptime('20'+update_time, '%Y-%m-%d %H:%M')
+        for key, item in dic.items():
+            if key in alive:
+                stamp = int(alive[:-(len(key))])
+                if item == 'days':
+                    format_time += datetime.timedelta(days=+stamp)
+                elif item == 'hours':
+                    format_time += datetime.timedelta(hours=+stamp)
+                elif item == 'minutes':
+                    format_time += datetime.timedelta(minutes=+stamp)
+                else:
+                    format_time = 0
+        return format_time
