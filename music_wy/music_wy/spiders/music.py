@@ -11,12 +11,19 @@ from scrapy import Selector
 # https://blog.csdn.net/sixu_9days/article/details/80780916
 
 class MusicSpider(scrapy.Spider):
-    max_page = 10
+    headers = {
+        'Accept': "*/*",
+        'Accept-Language': "zh-CN,zh;q=0.9",
+        'Connection': "keep-alive",
+        'Host': "music.163.com",
+        'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    }
+    max_page = 33
     name = 'music'  # 用于区别Spider。 该名字必须是唯一的，您不可以为不同的Spider设定相同的名字。
     allowed_domains = ['movie.douban.com']
-    baseUrl = 'https://movie.douban.com/subject/26985127/comments?limit=20&sort=new_score&status=P&start='
+    baseUrl = 'https://movie.douban.com/subject/3168101/comments?limit=20&sort=new_score&status=P&start='
     start_urls = [
-        'https://movie.douban.com/subject/26985127/comments?limit=20&sort=new_score&status=P&start=0']  # 包含了Spider在启动时进行爬取的url列表。 因此，第一个被获取到的页面将是其中之一。 后续的URL则从初始的URL获取到的数据中提取。
+        'https://movie.douban.com/subject/3168101/comments?limit=20&sort=new_score&status=P&start=0']  # 包含了Spider在启动时进行爬取的url列表。 因此，第一个被获取到的页面将是其中之一。 后续的URL则从初始的URL获取到的数据中提取。
 
     def parse(self, response):  # 默认解析器方法
         # data = {'uid': '', 'second_id': 0, 'type': 2, 'code': '', 'start': '', 'end': '', 'rand': 1536308617, 'page': 1}
@@ -32,14 +39,15 @@ class MusicSpider(scrapy.Spider):
         item_list = response.css("#comments div.comment-item").extract()
         tmp_list = response.css("#comments div.comment-item")
         rtn_item = {}
+        print(tmp_list)
         for val in tmp_list:
-            rtn_item['hist'] = val.css('span.votes::text').extract_first(defalut=0)
+            rtn_item['hist'] = val.css('span.votes::text').extract_first(default=0)
 
         for val in item_list:
             tmp = Selector(text=val)
-            rtn_item['hits'] = tmp.css('span.votes::text').extract_first(defalut=0)
-            rtn_item['name'] = tmp.css('span.comment-info>a::text').extract_first(defalut='null')
-            rtn_item['content'] = tmp.css('span.short::text').extract_first(defalut='null')
+            rtn_item['hits'] = tmp.css('span.votes::text').extract_first(default=0)
+            rtn_item['name'] = tmp.css('span.comment-info>a::text').extract_first(default='null')
+            rtn_item['content'] = tmp.css('span.short::text').extract_first(default='null')
             yield rtn_item
         # rtn_item = {}
         # for tr in tr_list:
